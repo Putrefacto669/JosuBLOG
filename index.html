@@ -54,10 +54,6 @@
         body {
             margin: 0;
             background: #000;
-            background-image:
-                radial-gradient(circle at 20% 10%, rgba(139, 0, 0, 0.25), transparent 40%),
-                radial-gradient(circle at 80% 90%, rgba(42, 0, 48, 0.45), transparent 45%),
-                repeating-linear-gradient(45deg, #030303 0px, #030303 2px, #0a0a0a 2px, #0a0a0a 4px);
             color: var(--texto);
             font-family: 'Trebuchet MS', Verdana, sans-serif;
             font-size: 14px;
@@ -68,6 +64,51 @@
 
         body.pov-on {
             overflow: hidden;
+        }
+
+        /* ---------- WALLPAPER ----------
+           Va en su propia capa fija y no en el body, por dos motivos:
+           1) antes la trama diagonal era opaca y estaba ENCIMA de la foto,
+              así que la tapaba entera y nunca se veía;
+           2) en el body, "cover" escala la foto al alto de TODA la página, y
+              en el celular (página larguísima) quedaba un zoom gigante y
+              borroso. Una capa fixed del tamaño de la pantalla lo evita, y
+              además funciona en iOS, que ignora background-attachment:fixed.
+           PC / laptop / tablet → font-PC.jpg
+           celular (vertical o acostado) → font-responsive.jpg */
+        .fondo {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-color: #000;
+            background-image:
+                radial-gradient(circle at 20% 10%, rgba(139, 0, 0, .25), transparent 40%),
+                radial-gradient(circle at 80% 90%, rgba(42, 0, 48, .45), transparent 45%),
+                linear-gradient(rgba(0, 0, 0, .45), rgba(0, 0, 0, .45)),
+                repeating-linear-gradient(45deg, rgba(0, 0, 0, .35) 0 2px, transparent 2px 4px),
+                url("assets/font-PC.jpg");
+            background-size: cover, cover, cover, auto, cover;
+            background-position: center, center, center, 0 0, center;
+            background-repeat: no-repeat, no-repeat, no-repeat, repeat, no-repeat;
+        }
+
+        /* celulares: angostos, o acostados (táctil y con poca altura). Las
+           tablets tienen pantalla alta, así que se quedan con la de PC. */
+        @media (max-width:700px),
+        (hover:none) and (pointer:coarse) and (max-height:500px) {
+            .fondo {
+                /* esta foto es casi toda blanca: el velo va más oscuro para
+                   que el texto que queda afuera del panel se siga leyendo */
+                background-image:
+                    radial-gradient(circle at 20% 10%, rgba(139, 0, 0, .25), transparent 40%),
+                    radial-gradient(circle at 80% 90%, rgba(42, 0, 48, .45), transparent 45%),
+                    linear-gradient(rgba(0, 0, 0, .45), rgba(0, 0, 0, .45)),
+                    repeating-linear-gradient(45deg, rgba(0, 0, 0, .35) 0 2px, transparent 2px 4px),
+                    url("assets/font-responsive.jpg");
+                /* los ojos están pegados al borde izquierdo */
+                background-position: center, center, center, 0 0, left center;
+            }
         }
 
         .scanlines {
@@ -115,7 +156,9 @@
         .marco {
             max-width: 920px;
             margin: 24px auto;
-            background: rgba(8, 8, 8, .93);
+            /* .85 y no .93 (opaco): el panel tiene que dejar pasar la foto de
+               fondo, si no el wallpaper queda reducido a una tira de 24px */
+            background: rgba(8, 8, 8, .85);
             border: 3px double var(--sangre);
             box-shadow: 0 0 35px rgba(139, 0, 0, .55), inset 0 0 40px rgba(0, 0, 0, .85);
             position: relative;
@@ -265,28 +308,27 @@
             line-height: 1.7;
         }
 
+        /* la foto es vertical (735x925) y la caja es cuadrada, así que se
+           recorta. object-position sube el encuadre porque en un retrato la
+           cara nunca está en el centro exacto */
         .perfil-img {
             width: 110px;
             height: 110px;
             display: block;
             margin: 0 auto 10px;
             border: 2px solid var(--sangre-claro);
-            background:
-                radial-gradient(circle at 65% 35%, rgba(179, 102, 255, .5), transparent 45%),
-                linear-gradient(135deg, #1a0020, #8b0000);
-            filter: grayscale(.4) contrast(1.25);
+            background: linear-gradient(135deg, #1a0020, #8b0000);
             position: relative;
             overflow: hidden;
         }
 
-        .perfil-img::after {
-            content: '🚬';
-            position: absolute;
-            inset: 0;
-            display: grid;
-            place-items: center;
-            font-size: 44px;
-            filter: drop-shadow(0 0 8px rgba(255, 122, 24, .8));
+        .perfil-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 22%;
+            display: block;
+            filter: grayscale(.4) contrast(1.25);
         }
 
         .stats {
@@ -1147,6 +1189,202 @@
             font-style: italic;
         }
 
+        /* ---------- comentarios de las notas ---------- */
+        .comentarios {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed #3a2020;
+        }
+
+        .com-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            font-family: var(--term);
+            font-size: 16px;
+            color: var(--ceniza);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .com-head b {
+            color: var(--sangre-claro);
+        }
+
+        .com {
+            border-left: 2px solid #4a2020;
+            padding: 5px 9px;
+            margin-bottom: 7px;
+            background: rgba(0, 0, 0, .35);
+            overflow-wrap: anywhere;
+        }
+
+        .com .cw {
+            font-family: var(--term);
+            font-size: 16px;
+            color: var(--verde-monster);
+        }
+
+        .com .cd {
+            font-size: 10.5px;
+            color: #6a6a6a;
+            margin-left: 6px;
+        }
+
+        .com .cm {
+            font-size: 13px;
+            color: #d0cdc8;
+            white-space: pre-wrap;
+        }
+
+        /* el form no lleva font-size propio: hereda el 16px global que evita
+           que iOS haga zoom al enfocar el campo */
+        .com-form {
+            margin-top: 10px;
+            padding: 9px;
+            border: 1px dotted #3a2020;
+            background: rgba(0, 0, 0, .3);
+        }
+
+        .com-form input {
+            margin-bottom: 5px;
+        }
+
+        .com-trampa {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        /* ---------- agradecimiento del dueño sobre una firma ---------- */
+        .gb-reply {
+            margin-top: 7px;
+            padding: 6px 9px;
+            border-left: 3px solid var(--morado-neon);
+            background: rgba(30, 0, 40, .4);
+            font-size: 13px;
+            color: #c9b0d8;
+            overflow-wrap: anywhere;
+        }
+
+        .gb-reply .rw {
+            font-family: var(--term);
+            font-size: 16px;
+            color: var(--morado-neon);
+        }
+
+        .agrad-item {
+            border: 1px dotted #4a3a5c;
+            background: rgba(30, 0, 40, .3);
+            padding: 8px 10px;
+            margin-bottom: 8px;
+        }
+
+        .agrad-item .gh {
+            font-family: var(--term);
+            font-size: 17px;
+            color: var(--morado-neon);
+            margin-bottom: 6px;
+        }
+
+        .agrad-item .gm {
+            font-size: 12.5px;
+            color: #b9a7c4;
+            border-left: 2px solid #4a3a5c;
+            padding-left: 8px;
+            margin-bottom: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        /* firma todavía sin responder: borde que llama la atención */
+        .agrad-item.pendiente {
+            border-style: solid;
+            border-color: var(--ambar);
+        }
+
+        .agrad-item .pend {
+            font-family: var(--term);
+            font-size: 13px;
+            color: var(--ambar);
+            border: 1px solid var(--ambar);
+            padding: 0 5px;
+            margin-left: 6px;
+        }
+
+        /* al llegar desde "↳ responder" la firma parpadea un momento */
+        .agrad-item.foco {
+            animation: focoFirma 1.6s ease-out;
+        }
+
+        @keyframes focoFirma {
+            0% {
+                box-shadow: 0 0 0 2px var(--morado-neon), 0 0 22px rgba(179, 102, 255, .8);
+            }
+
+            100% {
+                box-shadow: none;
+            }
+        }
+
+        /* botón que solo ve el dueño debajo de cada firma pública */
+        .gb-responder {
+            background: transparent;
+            border: 1px solid var(--morado);
+            color: var(--morado-neon);
+            font-family: var(--term);
+            font-size: 14px;
+            padding: 0 7px;
+            margin: 0 0 0 6px;
+        }
+
+        .gb-responder:hover {
+            background: transparent;
+            border-color: var(--morado-neon);
+            box-shadow: 0 0 8px rgba(179, 102, 255, .5);
+        }
+
+        .tab-badge {
+            display: inline-block;
+            background: var(--ambar);
+            color: #000;
+            font-size: 8px;
+            padding: 1px 4px;
+            margin-left: 5px;
+            border-radius: 6px;
+            vertical-align: middle;
+        }
+
+        .agrad-quitar {
+            background: transparent;
+            border: 1px solid #5a2020;
+            color: #c04848;
+        }
+
+        .agrad-quitar:hover {
+            background: transparent;
+            border-color: var(--sangre-claro);
+            color: var(--sangre-claro);
+            box-shadow: none;
+        }
+
+        .agrad-form {
+            display: flex;
+            gap: 6px;
+            align-items: flex-start;
+        }
+
+        .agrad-form textarea {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .agrad-form button {
+            flex-shrink: 0;
+        }
+
         /* ============ RESPONSIVE ============ */
 
         /* nada debe desbordar a lo ancho: en móvil el scroll horizontal
@@ -1175,11 +1413,11 @@
                 font-size: 15px;
             }
 
+            /* margin en vez de margin:0 — pegado a los bordes no queda ni un
+               píxel de fondo, y en el celular la foto es lo único que hay */
             .marco {
-                margin: 0;
+                margin: 8px;
                 border-width: 2px;
-                border-left: none;
-                border-right: none;
             }
 
             .contenido {
@@ -1248,6 +1486,15 @@
                 margin: 18px 0;
             }
 
+            /* el textarea y el botón del agradecimiento, uno debajo del otro */
+            .agrad-form {
+                flex-direction: column;
+            }
+
+            .agrad-form button {
+                width: 100%;
+            }
+
             .tabs {
                 display: flex;
                 flex-wrap: wrap;
@@ -1268,10 +1515,6 @@
             .perfil-img {
                 width: 88px;
                 height: 88px;
-            }
-
-            .perfil-img::after {
-                font-size: 34px;
             }
 
             .blinkie {
@@ -1389,6 +1632,18 @@
 
         @media (max-width:700px) {
 
+            /* el width:220px de la regla de 900px (que va después en el
+               archivo) le ganaba al 100% de móvil y aplastaba la barra */
+            .sidebar {
+                width: 100%;
+            }
+
+            /* un poco más transparente que en PC: en el celular el panel
+               tapa casi toda la pantalla y el wallpaper no se llegaba a ver */
+            .marco {
+                background: rgba(8, 8, 8, .78);
+            }
+
             /* el título glitch con letter-spacing 2px se salía en 360px */
             .glitch {
                 letter-spacing: 1px;
@@ -1502,11 +1757,501 @@
                 transition: none !important;
             }
         }
+        /* el bloque del clima solo existe en invierno */
+        .clima {
+            display: none;
+        }
+
+        /* =====================================================================
+           ❄ MODO INVIERNO — diseño exclusivo del celular ❄
+           Sale de la foto de los ojos: blanco nieve, tinta negra salpicada y
+           el rojo del iris. La estética es la de Cry of Fear: Estocolmo
+           nevado, frío, y alguien mirándote desde el otro lado del vidrio.
+           - el header se vuelve un "hero" transparente: los ojos se ven
+             enteros y el título va en tinta sobre la zona blanca
+           - las cajas son tarjetas de tinta con escarcha y nieve acumulada
+             arriba; entre tarjeta y tarjeta se asoma la nieve (y los ojos)
+           - el morado neón pasa a hielo, el verde a verde congelado, y el
+             único calor que queda es la brasa del cigarro (ámbar)
+           - en vez de ceniza cae nieve, y al tocar la pantalla sale vaho
+           Va al final del <style> para ganarle a todas las reglas móviles.
+           ===================================================================== */
+        @media (max-width:700px),
+        (hover:none) and (pointer:coarse) and (max-height:500px) {
+            :root {
+                --negro: #06070a;
+                --sangre: #7a0f1f;
+                --sangre-claro: #d42a49;
+                --morado: #1c2632;
+                --morado-neon: #b3c6da;
+                --texto: #d6dde5;
+                --verde-monster: #8fd6c9;
+                --ceniza: #98a4b1;
+                --hielo: #cfdbe7;
+                --hielo-dim: rgba(190, 208, 226, .28);
+                --tinta: rgba(7, 9, 13, .9);
+                --iris: #c8243f;
+            }
+
+            html {
+                scrollbar-color: var(--iris) #0b0d12;
+            }
+
+            body {
+                background: #e9e8e6;
+            }
+
+            ::selection {
+                background: var(--iris);
+            }
+
+            /* los ojos, apenas enfriados: la foto tiene que respirar */
+            .fondo {
+                background-image:
+                    linear-gradient(180deg, rgba(8, 10, 16, 0) 35%, rgba(8, 10, 16, .38) 100%),
+                    linear-gradient(rgba(150, 175, 205, .10), rgba(150, 175, 205, .10)),
+                    url("assets/font-responsive.jpg");
+                background-size: cover, cover, cover;
+                background-position: center, center, left top;
+                background-repeat: no-repeat;
+                filter: saturate(.9) contrast(1.05);
+            }
+
+            /* nieve acumulada en el borde de abajo de la pantalla */
+            .fondo::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 34px;
+                background:
+                    radial-gradient(18px 12px at 12% 100%, #f3f5f7 98%, transparent) ,
+                    radial-gradient(26px 14px at 38% 100%, #eef1f4 98%, transparent),
+                    radial-gradient(20px 11px at 66% 100%, #f3f5f7 98%, transparent),
+                    radial-gradient(30px 15px at 90% 100%, #eef1f4 98%, transparent),
+                    linear-gradient(transparent 60%, rgba(243, 245, 247, .9));
+                opacity: .85;
+            }
+
+            /* vidrio escarchado: los bordes de la pantalla se congelan */
+            .vignette {
+                background: radial-gradient(ellipse at center, transparent 58%, rgba(6, 8, 12, .5) 100%);
+                box-shadow: inset 0 0 38px rgba(215, 228, 240, .35), inset 0 0 90px rgba(170, 195, 220, .18);
+            }
+
+            .scanlines {
+                background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .10) 0 1px, transparent 1px 3px);
+            }
+
+            /* ---- el marco desaparece: el diseño son tarjetas sueltas ---- */
+            .marco {
+                margin: 0;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+            }
+
+            /* ---- HERO: los ojos te miran, el título en la nieve ---- */
+            header {
+                min-height: 64svh;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                align-items: flex-end;
+                text-align: right;
+                padding: 24px 16px 22px 42%;
+                background: none;
+                border-bottom: none;
+            }
+
+            .glitch {
+                color: #0a0a0c;
+                font-size: clamp(16px, 5.4vw, 24px);
+                letter-spacing: 1px;
+                text-shadow: 2px 2px 0 rgba(200, 36, 63, .35);
+            }
+
+            .glitch::before {
+                color: var(--iris);
+            }
+
+            .glitch::after {
+                color: #5f7a96;
+            }
+
+            header .sub {
+                color: #3b0c16;
+                font-size: 16px;
+                letter-spacing: 0;
+                line-height: 1.15;
+                margin-top: 10px;
+            }
+
+            .clima {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 3px;
+                margin-top: 12px;
+                font-family: var(--term);
+                font-size: 15px;
+                color: var(--hielo);
+            }
+
+            .clima span {
+                background: #07090d;
+                padding: 1px 8px;
+                border-left: 2px solid var(--iris);
+            }
+
+            .clima b {
+                color: #fff;
+                font-weight: normal;
+            }
+
+            /* la franja del marquee es un trazo de tinta */
+            marquee {
+                background: #06070a;
+                color: var(--hielo);
+                border-top: 1px solid var(--iris);
+                border-bottom: 1px solid var(--iris);
+                box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+            }
+
+            .sidebar,
+            .main {
+                background: transparent;
+                border: none;
+                padding: 16px 12px 4px;
+            }
+
+            .sidebar {
+                gap: 14px;
+            }
+
+            /* ---- TARJETAS DE TINTA con escarcha ---- */
+            .caja,
+            .post,
+            .vault,
+            footer {
+                position: relative;
+                background: var(--tinta);
+                border: 1px solid var(--hielo-dim);
+                border-radius: 3px;
+                box-shadow:
+                    0 12px 28px rgba(0, 0, 0, .35),
+                    inset 0 0 26px rgba(150, 180, 215, .07);
+                -webkit-backdrop-filter: blur(3px);
+                backdrop-filter: blur(3px);
+            }
+
+            /* nieve acumulada encima de cada tarjeta */
+            .caja::before,
+            .post::before,
+            .vault::before,
+            footer::before {
+                content: "";
+                position: absolute;
+                left: -2px;
+                right: -2px;
+                top: -9px;
+                height: 13px;
+                pointer-events: none;
+                background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14V9C12 5 22 4 34 7S58 3 74 5 96 9 112 6 138 1 156 4 180 8 198 6 222 2 242 5 266 9 286 6 312 2 330 5 352 9 372 6 390 3 400 6V14Z' fill='%23f3f5f7'/%3E%3Cpath d='M0 11C40 9 80 12 120 10S200 12 240 10 330 12 400 10' stroke='%23b9cadb' stroke-width='1' fill='none' opacity='.7'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+                filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35));
+            }
+
+            /* carámbanos colgando del borde de abajo */
+            .caja::after,
+            .post::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: -11px;
+                height: 12px;
+                pointer-events: none;
+                background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 12' preserveAspectRatio='none'%3E%3Cpath d='M0 0H400V1L394 2 391 9 388 2 350 2 347 6 344 2 300 2 296 11 292 2 236 2 233 5 230 2 190 2 186 10 182 2 128 2 125 6 122 2 76 2 72 12 68 2 30 2 27 5 24 2 0 2Z' fill='%23dbe6f0' opacity='.85'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+                filter: drop-shadow(0 0 2px rgba(207, 219, 231, .6));
+            }
+
+            .caja {
+                padding: 14px 12px 12px;
+            }
+
+            .caja h3 {
+                color: var(--hielo);
+                border-bottom-color: rgba(200, 36, 63, .55);
+                letter-spacing: 1px;
+            }
+
+            .caja h3::before {
+                content: "❄ ";
+                color: var(--iris);
+            }
+
+            .post {
+                border-left: 3px solid var(--iris);
+                background: var(--tinta);
+                padding: 14px 12px;
+                margin-bottom: 26px;
+            }
+
+            .post:hover {
+                border-left-color: var(--ambar);
+                background: var(--tinta);
+            }
+
+            .post .fecha {
+                color: var(--ceniza);
+            }
+
+            .post h2 {
+                color: #f1f4f7;
+                text-shadow: 1px 1px 0 var(--iris);
+            }
+
+            .tag {
+                border-color: rgba(200, 36, 63, .6);
+                color: #e46a80;
+            }
+
+            blockquote {
+                border-left-color: var(--hielo);
+                color: #b9c6d4;
+            }
+
+            /* títulos de sección flotando sobre la nieve: rótulo de tinta */
+            .main>h2 {
+                display: inline-block;
+                background: #06070a;
+                color: var(--hielo) !important;
+                padding: 8px 12px;
+                margin: 22px 0 14px;
+                border-left: 3px solid var(--iris);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, .3);
+            }
+
+            /* los separadores quedan sobre la nieve: van en rojo iris */
+            .divider {
+                color: var(--iris);
+                text-shadow: 0 0 6px rgba(200, 36, 63, .5);
+                margin: -8px 0 18px;
+            }
+
+            .divider::before {
+                content: "❄ ";
+            }
+
+            .divider::after {
+                content: " ❄";
+            }
+
+            /* la bienvenida */
+            .main>.caja:first-child p {
+                color: #eef2f6 !important;
+            }
+
+            .perfil-img {
+                border-color: var(--iris);
+                box-shadow: 0 0 0 3px rgba(207, 219, 231, .25), 0 0 16px rgba(200, 36, 63, .45);
+            }
+
+            .stats b {
+                color: var(--hielo);
+            }
+
+            nav a {
+                color: #c6d0da;
+                border-bottom: 1px dotted rgba(190, 208, 226, .14);
+            }
+
+            nav a:hover {
+                color: var(--iris);
+                text-shadow: 0 0 8px rgba(200, 36, 63, .6);
+            }
+
+            /* blinkies escarchados */
+            .blinkie {
+                background: #0b0e14;
+                border-color: var(--hielo-dim);
+                color: var(--hielo);
+                animation-name: escarcha;
+            }
+
+            @keyframes escarcha {
+                from {
+                    box-shadow: 0 0 2px rgba(207, 219, 231, .3);
+                }
+
+                to {
+                    box-shadow: 0 0 10px rgba(207, 219, 231, .55);
+                }
+            }
+
+            .gb-entry {
+                border: 1px dotted rgba(190, 208, 226, .22);
+                background: rgba(0, 0, 0, .25);
+            }
+
+            .gb-entry .who {
+                color: var(--hielo);
+            }
+
+            .gb-reply {
+                border-left-color: var(--iris);
+                background: rgba(120, 10, 30, .18);
+                color: #e2c9cf;
+            }
+
+            .gb-reply .rw {
+                color: #ff8a9d;
+            }
+
+            textarea,
+            input[type=text],
+            input[type=password],
+            input[type=url],
+            select {
+                background: rgba(0, 0, 0, .55);
+                border-color: var(--hielo-dim);
+                color: #eef2f6;
+            }
+
+            textarea:focus,
+            input:focus {
+                border-color: var(--iris);
+                box-shadow: 0 0 10px rgba(200, 36, 63, .45);
+            }
+
+            ::placeholder {
+                color: #6f7c8a;
+            }
+
+            button {
+                background: var(--iris);
+            }
+
+            button:hover {
+                background: #e0405d;
+            }
+
+            /* el cigarro es lo único cálido en todo este frío */
+            .btn-fumar {
+                background: #2a1600;
+                border-color: var(--ambar);
+                color: var(--ambar);
+                box-shadow: 0 0 14px rgba(255, 122, 24, .25);
+            }
+
+            .meter {
+                border-color: var(--hielo-dim);
+            }
+
+            .estado-linea {
+                border-top-color: rgba(190, 208, 226, .18);
+            }
+
+            footer {
+                margin: 22px 12px 18px;
+                color: #8b97a4;
+            }
+
+            footer a {
+                color: #ff8a9d;
+            }
+
+            .contador {
+                border-color: var(--hielo-dim);
+                color: var(--hielo);
+                text-shadow: 0 0 5px rgba(207, 219, 231, .6);
+            }
+
+            .quote-rot {
+                color: #b9c6d4;
+            }
+
+            .small {
+                color: #8e9aa7;
+            }
+
+            .vault {
+                margin: 22px 12px 26px;
+                border: 1px solid var(--hielo-dim);
+            }
+
+            .vault>h2 {
+                color: var(--hielo);
+                text-shadow: 0 0 8px rgba(207, 219, 231, .45);
+            }
+
+            .toast {
+                border-color: var(--hielo);
+                color: var(--hielo);
+                background: #07090d;
+                box-shadow: 0 0 18px rgba(207, 219, 231, .35);
+            }
+
+            /* ---- copos ---- */
+            .copo {
+                border-radius: 50%;
+                background: #fff;
+                box-shadow: 0 0 4px rgba(255, 255, 255, .9);
+                animation-name: nevar;
+                animation-timing-function: linear;
+                animation-iteration-count: 1;
+                animation-fill-mode: forwards;
+            }
+
+            @keyframes nevar {
+                0% {
+                    transform: translate(0, 0);
+                    opacity: 0;
+                }
+
+                10% {
+                    opacity: var(--op, .85);
+                }
+
+                30% {
+                    transform: translate(calc(var(--drift, 20px) * .6), 30vh);
+                }
+
+                60% {
+                    transform: translate(calc(var(--drift, 20px) * -.4), 62vh);
+                }
+
+                90% {
+                    opacity: var(--op, .85);
+                }
+
+                100% {
+                    transform: translate(var(--drift, 20px), 106vh);
+                    opacity: 0;
+                }
+            }
+        }
+
+        /* celular acostado: el hero no puede comerse toda la altura */
+        @media (hover:none) and (pointer:coarse) and (max-height:500px) {
+            header {
+                min-height: 78svh;
+                padding-left: 48%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .copo {
+                display: none;
+            }
+        }
     </style>
 </head>
 
 <body>
 
+    <div class="fondo" aria-hidden="true"></div>
     <div class="scanlines"></div>
     <div class="vignette"></div>
     <canvas id="humo"></canvas>
@@ -1546,6 +2291,12 @@
         <header>
             <h1 class="glitch" data-text="✖ JOSU ✖">✖ JOSU ✖</h1>
             <div class="sub">josu · 21 · insomnio, cafetera y Cry of Fear de madrugada</div>
+            <!-- solo se ve en el celular (modo invierno) -->
+            <div class="clima" aria-hidden="true">
+                <span>❄ <b id="temp">-14°C</b></span>
+                <span>estocolmo · 03:00</span>
+                <span>la nieve no para</span>
+            </div>
         </header>
 
         <marquee scrollamount="4">21. insomne desde los diecisiete. Cry of Fear y café pasado. este es un blog de
@@ -1557,7 +2308,7 @@
             <aside class="sidebar">
                 <div class="caja">
                     <h3>sobre mi</h3>
-                    <div class="perfil-img"></div>
+                    <div class="perfil-img"><img src="assets/pic.jpg" alt="josu en el balcón"></div>
                     <div class="stats">
                         <div>nombre: <b>josu</b></div>
                         <div>edad: <b>21</b></div>
@@ -1759,6 +2510,7 @@
             <button id="tabDiario" class="on">diario personal</button>
             <button id="tabBaul">baúl de media</button>
             <button id="tabPub">publicar nota</button>
+            <button id="tabAgrad">agradecimientos</button>
             <button id="tabNow">estado</button>
         </div>
 
@@ -1816,6 +2568,16 @@
             <div id="pubPostsAdmin"></div>
         </div>
 
+        <div class="panel" id="agradPane">
+            <h4>responder / agradecer una firma</h4>
+            <p class="empty-hint">lo que escribas queda publicado debajo del mensaje de esa persona. solo vos
+                podés escribirlo: la base de datos rechaza el guardado si la petición no viene con sesión
+                iniciada, así que ningún visitante puede hacerse pasar por el dueño. atajo: con el sótano
+                abierto, cada firma de abajo trae un botón "↳ responder" que te trae directo acá.</p>
+            <div id="agradList"></div>
+            <button type="button" id="agradReload">recargar firmas</button>
+        </div>
+
         <div class="panel" id="nowPane">
             <h4>qué estás escuchando</h4>
             <form id="nowForm">
@@ -1856,6 +2618,8 @@
 
         const $ = id => document.getElementById(id);
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        /* misma condición que el bloque CSS del modo invierno (celulares) */
+        const invierno = window.matchMedia('(max-width:700px), (hover:none) and (pointer:coarse) and (max-height:500px)');
 
         function store(key, val) {
             try {
@@ -1987,8 +2751,9 @@
                 const alpha = p.a * Math.max(0, 1 - p.life / p.max);
                 if (alpha <= 0 || p.y < -20) { trail.splice(i, 1); continue; }
                 const g = hx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2);
-                g.addColorStop(0, 'rgba(190,190,190,' + alpha + ')');
-                g.addColorStop(1, 'rgba(190,190,190,0)');
+                const col = invierno.matches ? '225,234,244' : '190,190,190';
+                g.addColorStop(0, 'rgba(' + col + ',' + alpha + ')');
+                g.addColorStop(1, 'rgba(' + col + ',0)');
                 hx.fillStyle = g;
                 hx.beginPath();
                 hx.arc(p.x, p.y, p.r * 2, 0, Math.PI * 2);
@@ -3159,10 +3924,11 @@
                 '<br><small>soltá para exhalar · APAGAR para dejarlo antes</small>';
         }
 
-        /* ---------- lluvia de ceniza (fondo) ---------- */
+        /* ---------- lluvia de ceniza (fondo) / nieve en modo invierno ---------- */
         setInterval(lluvia, 900);
         function lluvia() {
             if (reduced) return;
+            if (invierno.matches) { nevada(); return; }
             const colores = ['#fff', '#c0143c', '#888', '#ff7a18'];
             for (let i = 0; i < 12; i++) {
                 const g = document.createElement('div');
@@ -3177,6 +3943,48 @@
             }
         }
         lluvia();
+
+        /* copos con tres profundidades: los grandes están "cerca", caen más
+           rápido y van un poco desenfocados; los chiquitos quedan lejos */
+        function nevada() {
+            if (document.hidden) return;
+            for (let i = 0; i < 9; i++) {
+                const cerca = Math.random() < .18;
+                const lejos = !cerca && Math.random() < .45;
+                const tam = cerca ? 4 + Math.random() * 3 : lejos ? 1.5 + Math.random() : 2.5 + Math.random() * 1.5;
+                const c = document.createElement('div');
+                c.className = 'ceniza copo';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.width = c.style.height = tam + 'px';
+                c.style.setProperty('--drift', ((Math.random() - .5) * 90) + 'px');
+                c.style.setProperty('--op', cerca ? .95 : lejos ? .5 : .8);
+                if (cerca) c.style.filter = 'blur(1px)';
+                c.style.animationDuration = (cerca ? 6 + Math.random() * 3 : lejos ? 13 + Math.random() * 5 : 9 + Math.random() * 4) + 's';
+                c.style.animationDelay = (Math.random() * 1.5) + 's';
+                c.addEventListener('animationend', () => c.remove());
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 22000);
+            }
+        }
+
+        /* temperatura de "estocolmo": se mueve un poco cada tanto */
+        (function () {
+            const t = $('temp');
+            if (!t) return;
+            let grados = -14;
+            setInterval(() => {
+                grados = Math.max(-21, Math.min(-9, grados + Math.round((Math.random() - .5) * 2)));
+                t.textContent = grados + '°C';
+            }, 20000);
+        })();
+
+        /* vaho: en invierno, tocar la pantalla es como respirar contra el
+           vidrio. Se reusa el mismo canvas del humo, en blanco frío. */
+        addEventListener('touchstart', e => {
+            if (reduced || pov.on || !invierno.matches) return;
+            const t = e.touches[0];
+            if (t) puff(t.clientX, t.clientY, 5, false);
+        }, { passive: true });
 
         /* ---------- contador / reloj ---------- */
         let v = store('bsj_v2_visitas');
@@ -3231,17 +4039,168 @@
             return data;
         }
 
+        /* Los agradecimientos se leen en una sola consulta y se indexan por
+           gb_id: si no, era una consulta extra por cada firma de la lista. */
+        async function fetchAgradecimientos() {
+            const { data, error } = await sb.from('gb_replies')
+                .select('gb_id, reply, created_at').limit(200);
+            if (error) { console.error(error); return new Map(); }
+            const m = new Map();
+            (data || []).forEach(r => { if (!m.has(r.gb_id)) m.set(r.gb_id, r); });
+            return m;
+        }
+
+        function gbReplyHtml(r) {
+            return '<div class="gb-reply"><span class="rw">↳ josu:</span> ' + esc(r.reply) + '</div>';
+        }
+
         async function renderGB() {
             const entradas = await fetchGB();
+            const agrad = await fetchAgradecimientos();
             const { data: { session } } = await sb.auth.getSession();
             const list = $('gblist');
-            list.innerHTML = entradas.map(e =>
-                '<div class="gb-entry"><span class="who">' + esc(e.who) + ': </span>' + esc(e.msg) +
-                (session ? ' <button class="del" data-del-gb="' + e.id + '">✕</button>' : '') +
-                '</div>'
-            ).join('');
+            if (!entradas.length) {
+                list.innerHTML = '<p class="small">todavía no firmó nadie. Sé la primera persona.</p>';
+                return;
+            }
+            list.innerHTML = entradas.map(e => {
+                const id = String(e.id);
+                /* los botones de dueño solo se dibujan con sesión iniciada; y
+                   aunque alguien los inyectara, la RLS rechaza la escritura */
+                const botonesDueno = session
+                    ? ' <button class="gb-responder" data-reply-gb="' + esc(id) + '" title="responder solo como dueño">↳ ' +
+                      (agrad.has(id) ? 'editar respuesta' : 'responder') + '</button>' +
+                      ' <button class="del" data-del-gb="' + esc(id) + '" title="borrar firma">✕</button>'
+                    : '';
+                return '<div class="gb-entry"><span class="who">' + esc(e.who) + ': </span>' + esc(e.msg) +
+                    botonesDueno +
+                    (agrad.has(id) ? gbReplyHtml(agrad.get(id)) : '') +
+                    '</div>';
+            }).join('');
         }
         renderGB();
+
+        /* ---- panel del sótano: agradecer una firma ----
+           Esto es solo la parte visible: el candado real está en la política
+           RLS de gb_replies, que rechaza el insert si no hay sesión. Si alguien
+           sacara el formulario del HTML, la base igual no le guarda nada. */
+        async function renderAgrad() {
+            const c = $('agradList');
+            const entradas = await fetchGB();
+            if (!entradas.length) {
+                c.innerHTML = '<p class="empty-hint">no firmó nadie todavía.</p>';
+                return;
+            }
+            const agrad = await fetchAgradecimientos();
+
+            /* contador de firmas sin responder en la pestaña */
+            const pendientes = entradas.filter(e => !agrad.has(String(e.id))).length;
+            $('tabAgrad').innerHTML = 'agradecimientos' +
+                (pendientes ? '<span class="tab-badge">' + pendientes + '</span>' : '');
+
+            c.innerHTML = '';
+            entradas.forEach(e => {
+                const id = String(e.id);
+                const hay = agrad.has(id);
+
+                const item = document.createElement('div');
+                item.className = 'agrad-item' + (hay ? '' : ' pendiente');
+                item.id = 'agrad-' + id;
+                item.innerHTML =
+                    '<div class="gh">' + esc(e.who) +
+                    ' <span style="color:#6f5c7e;font-size:12px">· ' +
+                    esc(new Date(e.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })) +
+                    '</span>' + (hay ? '' : '<span class="pend">sin responder</span>') + '</div>' +
+                    '<div class="gm">' + esc(e.msg) + '</div>';
+
+                const form = document.createElement('form');
+                form.className = 'agrad-form';
+                form.dataset.gb = id;
+
+                const ta = document.createElement('textarea');
+                ta.rows = 2;
+                ta.maxLength = 300;
+                ta.required = true;
+                ta.placeholder = hay ? 'cambiar el agradecimiento...' : 'gracias por firmar...';
+                ta.value = hay ? agrad.get(id).reply : '';
+
+                const btn = document.createElement('button');
+                btn.type = 'submit';
+                btn.textContent = hay ? 'GUARDAR' : 'AGRADECER';
+
+                form.appendChild(ta);
+                form.appendChild(btn);
+                if (hay) {
+                    const quitar = document.createElement('button');
+                    quitar.type = 'button';
+                    quitar.className = 'agrad-quitar';
+                    quitar.dataset.delReply = id;
+                    quitar.textContent = 'QUITAR';
+                    form.appendChild(quitar);
+                }
+                item.appendChild(form);
+                c.appendChild(item);
+            });
+        }
+
+        /* "↳ responder" desde la firma pública: abre el sótano en la pestaña
+           de agradecimientos, baja hasta esa firma y deja el cursor listo */
+        async function irAResponder(gbId) {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { abrirModal(); return; }
+            if (!vault.classList.contains('show')) desbloquear();
+            panel('agrad');
+            await renderAgrad();
+            const item = document.getElementById('agrad-' + gbId);
+            if (!item) return;
+            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            item.classList.remove('foco');
+            void item.offsetWidth; // reinicia la animación si se toca dos veces
+            item.classList.add('foco');
+            const ta = item.querySelector('textarea');
+            if (ta) setTimeout(() => ta.focus({ preventScroll: true }), 450);
+        }
+
+        $('agradReload').addEventListener('click', renderAgrad);
+
+        async function mandarAgradecimiento(form) {
+            const texto = form.querySelector('textarea').value.trim();
+            if (!texto) return;
+            const gbId = form.dataset.gb;
+
+            /* gb_replies solo acepta session iniciada. Si la sesión se perdió
+               (o expiró) la petición sale como anónimo y rebota con un 401
+               bastante críptico: mejor cortarlo acá con un mensaje claro. */
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) {
+                toast('la sesión no está activa. cerrá el sótano y abrilo de nuevo.');
+                return;
+            }
+
+            /* Se pregunta antes de escribir en vez de usar upsert con
+               onConflict: eso obliga a Postgres a resolver la constraint para
+               armar el ON CONFLICT, y si algo no cuadra el guardado falla sin
+               dejar guardar. Con dos pasos no importa: si ya está, se
+               actualiza; si no, se inserta. */
+            const { data: actual, error: errLectura } = await sb.from('gb_replies')
+                .select('id').eq('gb_id', gbId).maybeSingle();
+
+            const { error } = actual
+                ? await sb.from('gb_replies').update({ reply: texto }).eq('id', actual.id)
+                : await sb.from('gb_replies').insert({ gb_id: gbId, reply: texto });
+
+            if (errLectura) console.error(errLectura);
+            if (error) {
+                console.error(error);
+                /* acá se muestra el código de error: es el panel privado del
+                   dueño, y sin esto no hay forma de saber por qué no guarda */
+                toast('no se pudo guardar (' + (error.code || error.message) + ')');
+                return;
+            }
+            toast('agradecimiento publicado. el que firmó lo va a ver. 🙏');
+            await renderAgrad();
+            await renderGB();
+        }
 
         $('gbform').addEventListener('submit', async e => {
             e.preventDefault();
@@ -3273,6 +4232,7 @@
             renderPrivPosts();
             renderPrivMedia();
             renderPubAdmin();
+            renderAgrad();
             renderGB();
             actualizarCuota();
             toast('sótano abierto. +15 minutos de sueño perdido.');
@@ -3301,20 +4261,22 @@
             toast('sótano cerrado. el humo queda adentro.');
         });
 
+        /* Los 5 tabs se apagan y prenden con la misma tabla: para agregar un
+           panel alcanza con agregar una fila acá. */
+        const TABS = [
+            ['diario', 'diarioPane', 'tabDiario'],
+            ['baul', 'baulPane', 'tabBaul'],
+            ['pub', 'pubPane', 'tabPub'],
+            ['agrad', 'agradPane', 'tabAgrad'],
+            ['now', 'nowPane', 'tabNow']
+        ];
         function panel(name) {
-            $('diarioPane').classList.toggle('show', name === 'diario');
-            $('baulPane').classList.toggle('show', name === 'baul');
-            $('pubPane').classList.toggle('show', name === 'pub');
-            $('nowPane').classList.toggle('show', name === 'now');
-            $('tabDiario').classList.toggle('on', name === 'diario');
-            $('tabBaul').classList.toggle('on', name === 'baul');
-            $('tabPub').classList.toggle('on', name === 'pub');
-            $('tabNow').classList.toggle('on', name === 'now');
+            TABS.forEach(([clave, pane, tab]) => {
+                $(pane).classList.toggle('show', clave === name);
+                $(tab).classList.toggle('on', clave === name);
+            });
         }
-        $('tabDiario').addEventListener('click', () => panel('diario'));
-        $('tabBaul').addEventListener('click', () => panel('baul'));
-        $('tabPub').addEventListener('click', () => panel('pub'));
-        $('tabNow').addEventListener('click', () => panel('now'));
+        TABS.forEach(([clave, , tab]) => $(tab).addEventListener('click', () => panel(clave)));
 
         /* =====================================================================
            ADJUNTOS DEL DIARIO
@@ -3716,14 +4678,107 @@
                 tags +
                 '<p>' + esc(p.body).replace(/\n/g, '<br>') + '</p>' +
                 adjuntosHtml(p) +
+                '<section class="comentarios" data-post="' + esc(String(p.id)) + '"></section>' +
                 '</article><div class="divider">✶ ✶ ✶</div>';
         }
 
         async function renderPubPosts() {
             const posts = await fetchPosts();
             $('postsPub').innerHTML = posts.map(pubPostHtml).join('');
+            await pintarComentarios(posts.map(p => String(p.id)));
         }
         renderPubPosts();
+
+        /* ---------- comentarios de los lectores ---------- */
+
+        /* Una sola consulta para todas las notas, no una por nota: al revés
+           serían hasta 100 viajes a la base con 100 notas publicadas. */
+        async function pintarComentarios(ids) {
+            const cajas = document.querySelectorAll('#postsPub [data-post]');
+            if (!cajas.length) return;
+
+            const porNota = new Map();
+            if (ids.length) {
+                const { data, error } = await sb.from('post_comments')
+                    .select('*').in('post_id', ids)
+                    .order('created_at', { ascending: true }).limit(800);
+                /* Si la tabla todavía no existe (migración sin correr) los
+                   comentarios no se ven, pero el blog sigue andando. */
+                if (error) { console.error(error); return; }
+                (data || []).forEach(c => {
+                    if (!porNota.has(c.post_id)) porNota.set(c.post_id, []);
+                    porNota.get(c.post_id).push(c);
+                });
+            }
+
+            const { data: { session } } = await sb.auth.getSession();
+            cajas.forEach(caja => pintarUnaNota(caja, porNota.get(caja.dataset.post) || [], !!session));
+        }
+
+        function comHtml(c, soyYo) {
+            const fecha = new Date(c.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' });
+            return '<div class="com">' +
+                '<span class="cw">' + esc(c.who) + '</span>' +
+                '<span class="cd">' + esc(fecha) + '</span>' +
+                (soyYo ? ' <button class="del" data-del-com="' + esc(c.id) + '" title="borrar comentario">✕</button>' : '') +
+                '<div class="cm">' + esc(c.msg) + '</div>' +
+                '</div>';
+        }
+
+        function pintarUnaNota(caja, lista, soyYo) {
+            const n = lista.length;
+            caja.innerHTML =
+                '<div class="com-head"><span>💬 ' +
+                (n ? '<b>' + n + '</b> comentario' + (n === 1 ? '' : 's') : 'sin comentarios todavía') +
+                '</span></div>' +
+                '<div class="com-lista">' + lista.map(c => comHtml(c, soyYo)).join('') + '</div>' +
+                '<form class="com-form" data-post="' + esc(caja.dataset.post) + '">' +
+                /* campo trampa: si un bot lo llena, no se envía nada */
+                '<input class="com-trampa" type="text" name="sitio" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+                '<input type="text" name="quien" maxlength="24" placeholder="tu nombre..." required>' +
+                '<textarea name="texto" rows="2" maxlength="600" placeholder="dejá lo que quieras..." required></textarea>' +
+                '<button type="submit">COMENTAR</button>' +
+                '</form>';
+
+            // el nombre se recuerda: a la segunda visita no lo volvés a escribir
+            const nombre = caja.querySelector('.com-form input[name=quien]');
+            if (nombre) nombre.value = store('bsj_v2_firma') || '';
+        }
+
+        /* Traba de un comentario cada tanto. Ojo: esto vive en el navegador, así
+           que frena al visitante distraído, no al spam de verdad — eso lo frenan
+           los CHECK de la base y, si hace falta, la moderación. */
+        const COMENTARIO_MIN = 25;
+
+        async function mandarComentario(form) {
+            if (form.querySelector('.com-trampa').value) return;      // bot
+            const quien = form.querySelector('input[name=quien]').value.trim();
+            const texto = form.querySelector('textarea[name=texto]').value.trim();
+            if (!quien || !texto) return;
+
+            const ultima = store('bsj_v2_ultimo_comentario') || 0;
+            const faltan = Math.ceil((COMENTARIO_MIN * 1000 - (Date.now() - ultima)) / 1000);
+            if (faltan > 0) {
+                toast('un comentario cada ' + COMENTARIO_MIN + 's. faltan ' + faltan + '.');
+                return;
+            }
+
+            const { error } = await sb.from('post_comments')
+                .insert({ post_id: form.dataset.post, who: quien, msg: texto });
+            /* El mensaje de error de Supabase no se muestra: describe el
+               esquema de la base y eso no le sirve a quien está del otro lado. */
+            if (error) {
+                console.error(error);
+                toast('no se pudo comentar. recargá la página e intentá de nuevo.');
+                return;
+            }
+
+            store('bsj_v2_ultimo_comentario', Date.now());
+            store('bsj_v2_firma', quien);
+            form.reset();
+            toast('comentario publicado. 🖤');
+            await renderPubPosts();
+        }
 
         async function renderPubAdmin() {
             const posts = await fetchPosts();
@@ -3896,6 +4951,22 @@
             if (!error) { await renderNowPlaying(); toast('estado apagado.'); }
         });
 
+        /* Los formularios de comentarios y de agradecimientos viven dentro de
+           HTML que se re-dibuja entero, así que se atienden por delegación en
+           document en vez de con un addEventListener por nota. */
+        document.addEventListener('submit', async e => {
+            const form = e.target;
+            if (form.classList && form.classList.contains('com-form')) {
+                e.preventDefault();
+                await mandarComentario(form);
+                return;
+            }
+            if (form.classList && form.classList.contains('agrad-form')) {
+                e.preventDefault();
+                await mandarAgradecimiento(form);
+            }
+        });
+
         document.addEventListener('click', async e => {
             const dp = e.target.closest('[data-del-post]');
             if (dp) {
@@ -3917,12 +4988,21 @@
                 renderPrivMedia();
                 return;
             }
+            const dcom = e.target.closest('[data-del-com]');
+            if (dcom) {
+                const { error } = await sb.from('post_comments').delete().eq('id', dcom.dataset.delCom);
+                if (!error) { toast('comentario borrado.'); await renderPubPosts(); }
+                else toast('no se pudo borrar el comentario.');
+                return;
+            }
             const dpub = e.target.closest('[data-del-pub]');
             if (dpub) {
                 const id = dpub.dataset.delPub;
                 const { data: fila } = await sb.from('posts').select('attachments, attach_url').eq('id', id).single();
                 const { error } = await sb.from('posts').delete().eq('id', id);
                 if (!error) {
+                    /* los comentarios de esa nota se van con ella */
+                    await sb.from('post_comments').delete().eq('post_id', String(id));
                     const items = (fila && Array.isArray(fila.attachments) && fila.attachments.length)
                         ? fila.attachments : (fila && fila.attach_url ? [{ url: fila.attach_url }] : []);
                     const paths = items.map(a => pathDeUrlPublica(a.url)).filter(Boolean);
@@ -3932,10 +5012,30 @@
                 }
                 return;
             }
+            const rgb = e.target.closest('[data-reply-gb]');
+            if (rgb) {
+                await irAResponder(String(rgb.dataset.replyGb));
+                return;
+            }
+            const drep = e.target.closest('[data-del-reply]');
+            if (drep) {
+                if (!confirm('¿quitar tu respuesta de esta firma?')) return;
+                const { error } = await sb.from('gb_replies').delete().eq('gb_id', String(drep.dataset.delReply));
+                if (error) { toast('no se pudo quitar (' + (error.code || error.message) + ')'); return; }
+                toast('respuesta quitada.');
+                await renderAgrad();
+                await renderGB();
+                return;
+            }
             const dgb = e.target.closest('[data-del-gb]');
             if (dgb) {
-                const { error } = await sb.from('guestbook').delete().eq('id', dgb.dataset.delGb);
-                if (!error) await renderGB();
+                const id = String(dgb.dataset.delGb);
+                const { error } = await sb.from('guestbook').delete().eq('id', id);
+                if (!error) {
+                    /* y el agradecimiento con la firma, si había uno */
+                    await sb.from('gb_replies').delete().eq('gb_id', id);
+                    await renderGB();
+                }
             }
         });
     </script>
