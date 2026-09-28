@@ -427,6 +427,71 @@
             font-family: var(--term);
         }
 
+        /* ---------- estado: tarjetas con preview ---------- */
+        .est-card {
+            border: 1px solid var(--morado);
+            background: rgba(0, 0, 0, .5);
+            padding: 6px;
+            margin-bottom: 8px;
+        }
+
+        .est-card .et {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            font-family: var(--term);
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .est-card .et .tk {
+            color: var(--morado-neon);
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .est-card .et b {
+            color: #fff;
+            font-weight: normal;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .est-card iframe {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            height: auto;
+            border: 0;
+            display: block;
+            margin-top: 5px;
+            background: #000;
+        }
+
+        .est-card .eurl {
+            display: block;
+            font-family: var(--term);
+            font-size: 14px;
+            color: var(--morado-neon);
+            margin-top: 4px;
+        }
+
+        .est-card:hover {
+            border-color: var(--ambar);
+        }
+
+        .est-card:hover .eurl {
+            color: var(--ambar);
+        }
+
+        /* en el celular la barra es angosta: el embed se achica, no se corta */
+        @media (max-width:700px) {
+            .est-card .et {
+                font-size: 15px;
+            }
+        }
+
         .tag {
             display: inline-block;
             font-family: var(--term);
@@ -1260,7 +1325,8 @@
         }
 
         /* ---------- agradecimiento del dueño sobre una firma ---------- */
-        .gb-reply {
+        .gb-reply,
+        .com-reply {
             margin-top: 7px;
             padding: 6px 9px;
             border-left: 3px solid var(--morado-neon);
@@ -1270,10 +1336,49 @@
             overflow-wrap: anywhere;
         }
 
-        .gb-reply .rw {
+        .gb-reply .rw,
+        .com-reply .rw {
             font-family: var(--term);
             font-size: 16px;
             color: var(--morado-neon);
+        }
+
+        /* ---------- barra de emojis para responder ---------- */
+        .emoji-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin: 0 0 5px;
+        }
+
+        .emoji-bar button {
+            background: transparent;
+            border: 1px solid var(--morado);
+            color: var(--texto);
+            font-family: var(--term);
+            font-size: 15px;
+            line-height: 1;
+            padding: 2px 5px;
+            margin: 0;
+            min-height: 0;
+            filter: grayscale(.55);
+            transition: .15s;
+        }
+
+        .emoji-bar button:hover {
+            background: rgba(60, 0, 80, .6);
+            border-color: var(--morado-neon);
+            box-shadow: none;
+            filter: none;
+        }
+
+        /* de qué nota vino el comentario, en el panel del dueño */
+        .com-nota {
+            font-family: var(--term);
+            font-size: 13px;
+            color: #7e6a8e;
+            margin-bottom: 5px;
+            overflow-wrap: anywhere;
         }
 
         .agrad-item {
@@ -1452,6 +1557,12 @@
             /* estas dos merecen el ancho completo */
             .sidebar .caja:first-child,
             .sidebar .paquete-cigs {
+                grid-column: 1 / -1;
+            }
+
+            /* el estado lleva el video embebido: en media columna se ve
+               demasiado chiquito para valer algo */
+            .sidebar #nowPlayingBox {
                 grid-column: 1 / -1;
             }
 
@@ -2106,8 +2217,14 @@
                 color: #e2c9cf;
             }
 
-            .gb-reply .rw {
+            .gb-reply .rw,
+            .com-reply .rw {
                 color: #ff8a9d;
+            }
+
+            .emoji-bar button {
+                border-color: var(--hielo-dim);
+                color: #e2e8ee;
             }
 
             textarea,
@@ -2322,7 +2439,7 @@
                 </div>
 
                 <div class="caja" id="nowPlayingBox" style="display:none;">
-                    <h3>🎧 ahora sonando</h3>
+                    <h3>▸ estado</h3>
                     <div id="nowPlayingBody"></div>
                 </div>
 
@@ -2512,6 +2629,7 @@
             <button id="tabBaul">baúl de media</button>
             <button id="tabPub">publicar nota</button>
             <button id="tabAgrad">agradecimientos</button>
+            <button id="tabCom">comentarios</button>
             <button id="tabNow">estado</button>
         </div>
 
@@ -2579,15 +2697,37 @@
             <button type="button" id="agradReload">recargar firmas</button>
         </div>
 
+        <div class="panel" id="comPane">
+            <h4>comentarios: responder y borrar</h4>
+            <p class="empty-hint">lo que escribas queda publicado debajo del comentario de esa persona, con tu
+                nombre. solo vos podés hacerlo: la base rechaza el guardado si la petición no viene con sesión
+                iniciada, así que ningún visitante puede hacerse pasar por el dueño. el ✕ borra el comentario
+                entero, y con él su respuesta. atajo: con el sótano abierto, cada comentario trae un "↳ responder"
+                que te trae directo acá.</p>
+            <div id="comList"></div>
+            <button type="button" id="comReload">recargar comentarios</button>
+        </div>
+
         <div class="panel" id="nowPane">
-            <h4>qué estás escuchando</h4>
-            <form id="nowForm">
-                <input type="text" id="nowLabel" placeholder="canción / artista..." maxlength="80" required>
-                <input type="url" id="nowUrl" placeholder="(opcional) link de youtube...">
-                <button type="submit">ACTUALIZAR ESTADO</button>
+            <h4>tu estado (lo que te tiene flechado)</h4>
+            <form id="estForm">
+                <select name="tipo" id="estTipo">
+                    <option value="música">música</option>
+                    <option value="opening">opening</option>
+                    <option value="juego">juego</option>
+                    <option value="libro">libro</option>
+                    <option value="serie">serie</option>
+                    <option value="otro">otro</option>
+                </select>
+                <input type="text" name="titulo" id="estTitulo" placeholder="canción / opening / lo que sea..." maxlength="80"
+                    required>
+                <input type="url" name="url" id="estUrl" placeholder="link de youtube (watch, youtu.be, shorts...)"
+                    required>
+                <button type="submit">AGREGAR AL ESTADO</button>
             </form>
-            <button id="nowClear" type="button" class="btn-fumar" style="margin-top:10px;">APAGAR ESTADO</button>
-            <p class="empty-hint">esto se muestra en la barra lateral como "🎧 ahora sonando", visible para todos.</p>
+            <p class="empty-hint">cada fila sale como tarjeta en la barra lateral, con el video de youtube
+                embebido. se muestran hasta 6, de más nuevo a más viejo.</p>
+            <div id="estList"></div>
         </div>
 
         <div class="vault-lock">
@@ -4205,6 +4345,164 @@
             await renderGB();
         }
 
+        /* ---------- emojis para responder ----------
+           Un <textarea> pelado no saca teclado de emojis en el celular. El
+           insert se hace en el cursor (setRangeText) y no al final del texto,
+           así se puede escribir "gracias 🖤" sin acomodar nada después. */
+        const EMOJIS = ['😶', '🖤', '🚬', '☕', '🌙', '🥫', '😴', '💚', '🕯', '🎧', '👀', '😭', '💀', '😂', '🫠',
+            '🌧'];
+
+        function meterEmoji(ta, emo) {
+            const i = ta.selectionStart == null ? ta.value.length : ta.selectionStart;
+            const j = ta.selectionEnd == null ? i : ta.selectionEnd;
+            ta.setRangeText(' ' + emo + ' ', i, j, 'end');
+            ta.focus();
+            ta.dispatchEvent(new Event('input'));
+        }
+
+        function barraEmoji() {
+            const bar = document.createElement('div');
+            bar.className = 'emoji-bar';
+            EMOJIS.forEach(emo => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.dataset.e = emo;
+                b.textContent = emo;
+                bar.appendChild(b);
+            });
+            return bar;
+        }
+
+        /* ---------- panel del sótano: responder y borrar comentarios ----------
+           Mismo candado que las firmas: el que escribe es la RLS de
+           comment_replies, no este formulario. */
+        async function renderComAdmin() {
+            const c = $('comList');
+            if (!c) return;
+            const { data: comentarios, error } = await sb.from('post_comments')
+                .select('*').order('created_at', { ascending: false }).limit(200);
+            if (error) {
+                c.innerHTML = '<p class="empty-hint">no se pudieron leer (' + (error.code || error.message) + ')</p>';
+                return;
+            }
+            if (!comentarios || !comentarios.length) {
+                c.innerHTML = '<p class="empty-hint">nadie comentó todavía.</p>';
+                return;
+            }
+            const respuestas = await fetchRespuestasCom(comentarios.map(x => String(x.id)));
+
+            /* el título de la nota: un comentario suelto no dice de dónde vino */
+            const { data: notas } = await sb.from('posts').select('id, title');
+            const titulos = new Map((notas || []).map(p => [String(p.id), p.title]));
+
+            /* contador de comentarios sin responder en la pestaña */
+            const pendientes = comentarios.filter(x => !respuestas.has(String(x.id))).length;
+            $('tabCom').innerHTML = 'comentarios' +
+                (pendientes ? '<span class="tab-badge">' + pendientes + '</span>' : '');
+
+            c.innerHTML = '';
+            comentarios.forEach(x => {
+                const id = String(x.id);
+                const r = respuestas.get(id);
+
+                const item = document.createElement('div');
+                item.className = 'agrad-item' + (r ? '' : ' pendiente');
+                item.id = 'com-' + id;
+                item.innerHTML =
+                    '<div class="gh">' + esc(x.who) +
+                    ' <span style="color:#6f5c7e;font-size:12px">· ' +
+                    esc(new Date(x.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })) +
+                    '</span>' + (r ? '' : '<span class="pend">sin responder</span>') +
+                    ' <button class="del" data-del-com="' + esc(id) + '" title="borrar el comentario">✕</button></div>' +
+                    '<div class="com-nota">en "' + esc(titulos.get(String(x.post_id)) || 'nota borrada') + '"</div>' +
+                    '<div class="gm">' + esc(x.msg) + '</div>';
+
+                const form = document.createElement('form');
+                form.className = 'agrad-form com-reply-form';
+                form.dataset.com = id;
+
+                const ta = document.createElement('textarea');
+                ta.rows = 2;
+                ta.maxLength = 300;
+                ta.required = true;
+                ta.placeholder = r ? 'cambiar la respuesta...' : 'responder...';
+                ta.value = r ? r.reply : '';
+
+                const btn = document.createElement('button');
+                btn.type = 'submit';
+                btn.textContent = r ? 'GUARDAR' : 'RESPONDER';
+
+                form.appendChild(barraEmoji());
+                form.appendChild(ta);
+                form.appendChild(btn);
+                if (r) {
+                    const quitar = document.createElement('button');
+                    quitar.type = 'button';
+                    quitar.className = 'agrad-quitar';
+                    quitar.dataset.delReplyCom = id;
+                    quitar.textContent = 'QUITAR';
+                    form.appendChild(quitar);
+                }
+                item.appendChild(form);
+                c.appendChild(item);
+            });
+        }
+
+        /* "↳ responder" desde el comentario público: abre el sótano en la
+           pestaña de comentarios, baja hasta ese comentario y deja el cursor
+           listo */
+        async function irAResponderCom(comId) {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { abrirModal(); return; }
+            if (!vault.classList.contains('show')) desbloquear();
+            panel('com');
+            await renderComAdmin();
+            const item = document.getElementById('com-' + comId);
+            if (!item) return;
+            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            item.classList.remove('foco');
+            void item.offsetWidth; // reinicia la animación si se toca dos veces
+            item.classList.add('foco');
+            const ta = item.querySelector('textarea');
+            if (ta) setTimeout(() => ta.focus({ preventScroll: true }), 450);
+        }
+
+        $('comReload').addEventListener('click', renderComAdmin);
+
+        async function mandarRespuestaComentario(form) {
+            const texto = form.querySelector('textarea').value.trim();
+            if (!texto) return;
+            const comId = form.dataset.com;
+
+            /* comment_replies solo acepta sesión iniciada. Si la sesión se
+               perdió (o expiró) la petición sale como anónimo y rebota con un
+               401 bastante críptico: mejor cortarlo acá con un mensaje claro. */
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) {
+                toast('la sesión no está activa. cerrá el sótano y abrilo de nuevo.');
+                return;
+            }
+
+            const { data: actual, error: errLectura } = await sb.from('comment_replies')
+                .select('id').eq('comment_id', comId).maybeSingle();
+
+            const { error } = actual
+                ? await sb.from('comment_replies').update({ reply: texto }).eq('id', actual.id)
+                : await sb.from('comment_replies').insert({ comment_id: comId, reply: texto });
+
+            if (errLectura) console.error(errLectura);
+            if (error) {
+                console.error(error);
+                /* acá se muestra el código de error: es el panel privado del
+                   dueño, y sin esto no hay forma de saber por qué no guarda */
+                toast('no se pudo guardar (' + (error.code || error.message) + ')');
+                return;
+            }
+            toast('respuesta publicada. 💬');
+            await renderComAdmin();
+            await renderPubPosts();
+        }
+
         $('gbform').addEventListener('submit', async e => {
             e.preventDefault();
             const n = $('gbname').value.trim();
@@ -4264,13 +4562,14 @@
             toast('sótano cerrado. el humo queda adentro.');
         });
 
-        /* Los 5 tabs se apagan y prenden con la misma tabla: para agregar un
+        /* Los 6 tabs se apagan y prenden con la misma tabla: para agregar un
            panel alcanza con agregar una fila acá. */
         const TABS = [
             ['diario', 'diarioPane', 'tabDiario'],
             ['baul', 'baulPane', 'tabBaul'],
             ['pub', 'pubPane', 'tabPub'],
             ['agrad', 'agradPane', 'tabAgrad'],
+            ['com', 'comPane', 'tabCom'],
             ['now', 'nowPane', 'tabNow']
         ];
         function panel(name) {
@@ -4280,6 +4579,14 @@
             });
         }
         TABS.forEach(([clave, , tab]) => $(tab).addEventListener('click', () => panel(clave)));
+
+        /* el estado se relee al abrir la tab: si lo cambiaste desde otro lado
+           o lo dejaste a medias, la lista no te muestra cosas viejas */
+        $('tabNow').addEventListener('click', renderEstAdmin);
+
+        /* lo mismo con los comentarios: pueden llegar mientras el sótano está
+           abierto, y el contador de "sin responder" tiene que estar al día */
+        $('tabCom').addEventListener('click', renderComAdmin);
 
         /* =====================================================================
            ADJUNTOS DEL DIARIO
@@ -4712,29 +5019,57 @@
                     if (!porNota.has(c.post_id)) porNota.set(c.post_id, []);
                     porNota.get(c.post_id).push(c);
                 });
+                /* las respuestas del dueño se piden una vez para todos los
+                   comentarios que acaban de llegar, no una por comentario */
+                const respuestas = await fetchRespuestasCom((data || []).map(c => String(c.id)));
+                const { data: { session } } = await sb.auth.getSession();
+                cajas.forEach(caja => pintarUnaNota(caja, porNota.get(caja.dataset.post) || [], !!session, respuestas));
+                return;
             }
-
             const { data: { session } } = await sb.auth.getSession();
-            cajas.forEach(caja => pintarUnaNota(caja, porNota.get(caja.dataset.post) || [], !!session));
+            cajas.forEach(caja => pintarUnaNota(caja, [], !!session, new Map()));
         }
 
-        function comHtml(c, soyYo) {
+        async function fetchRespuestasCom(ids) {
+            if (!ids || !ids.length) return new Map();
+            const { data, error } = await sb.from('comment_replies')
+                .select('comment_id, reply').in('comment_id', ids).limit(500);
+            if (error) { console.error(error); return new Map(); }
+            const m = new Map();
+            (data || []).forEach(r => { if (!m.has(r.comment_id)) m.set(r.comment_id, r); });
+            return m;
+        }
+
+        function comReplyHtml(r) {
+            return '<div class="com-reply"><span class="rw">↳ josu:</span> ' + esc(r.reply) + '</div>';
+        }
+
+        function comHtml(c, soyYo, respuestas) {
+            const id = String(c.id);
             const fecha = new Date(c.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' });
+            const r = respuestas && respuestas.get(id);
+            /* los botones de dueño solo se dibujan con sesión iniciada; y
+               aunque alguien los inyectara, la RLS rechaza el borrado */
+            const botones = soyYo
+                ? ' <button class="gb-responder" data-reply-com="' + esc(id) + '" title="responder solo como dueño">↳ ' +
+                  (r ? 'editar' : 'responder') + '</button>' +
+                  ' <button class="del" data-del-com="' + esc(id) + '" title="borrar comentario">✕</button>'
+                : '';
             return '<div class="com">' +
                 '<span class="cw">' + esc(c.who) + '</span>' +
-                '<span class="cd">' + esc(fecha) + '</span>' +
-                (soyYo ? ' <button class="del" data-del-com="' + esc(c.id) + '" title="borrar comentario">✕</button>' : '') +
+                '<span class="cd">' + esc(fecha) + '</span>' + botones +
                 '<div class="cm">' + esc(c.msg) + '</div>' +
+                (r ? comReplyHtml(r) : '') +
                 '</div>';
         }
 
-        function pintarUnaNota(caja, lista, soyYo) {
+        function pintarUnaNota(caja, lista, soyYo, respuestas) {
             const n = lista.length;
             caja.innerHTML =
                 '<div class="com-head"><span>💬 ' +
                 (n ? '<b>' + n + '</b> comentario' + (n === 1 ? '' : 's') : 'sin comentarios todavía') +
                 '</span></div>' +
-                '<div class="com-lista">' + lista.map(c => comHtml(c, soyYo)).join('') + '</div>' +
+                '<div class="com-lista">' + lista.map(c => comHtml(c, soyYo, respuestas)).join('') + '</div>' +
                 '<form class="com-form" data-post="' + esc(caja.dataset.post) + '">' +
                 /* campo trampa: si un bot lo llena, no se envía nada */
                 '<input class="com-trampa" type="text" name="sitio" tabindex="-1" autocomplete="off" aria-hidden="true">' +
@@ -4912,56 +5247,102 @@
         });
 
         /* ---------- ahora escuchando (en Supabase) ---------- */
-        async function fetchNowPlaying() {
-            const { data, error } = await sb.from('now_playing').select('*').eq('id', 1).single();
-            if (error) { console.error(error); return null; }
-            return data;
+        /* ---------- estado: N tarjetas con el video embebido ---------- */
+
+        /* youtube en muchos formatos: watch?v=, youtu.be/ID, /shorts/ID,
+           /live/ID, /embed/ID. Si ya viene un ID suelto, se usa tal cual.
+           Devuelve null si no parece youtube: ahí se muestra solo el link. */
+        function embedDeYoutube(url) {
+            if (!url) return null;
+            const crudo = String(url).trim();
+            if (/^[\w-]{6,20}$/.test(crudo)) return 'https://www.youtube-nocookie.com/embed/' + crudo;
+            const m = crudo.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{6,20})/);
+            return m ? 'https://www.youtube-nocookie.com/embed/' + m[1] : null;
         }
 
-        async function renderNowPlaying() {
-            const np = await fetchNowPlaying();
+        const TIPOS_EST = {
+            'música': '🎵', 'opening': '📺', 'juego': '🎮',
+            'libro': '📖', 'serie': '📼', 'otro': '✦'
+        };
+
+        async function fetchEstados() {
+            const { data, error } = await sb.from('estados')
+                .select('*').order('actualizado', { ascending: false }).limit(6);
+            /* Si la tabla todavía no existe (migración sin correr) la caja se
+               esconde y el blog sigue andando. */
+            if (error) { console.error(error); return []; }
+            return data || [];
+        }
+
+        function estHtml(f) {
+            const emb = embedDeYoutube(f.url);
+            return '<div class="est-card">' +
+                '<div class="et"><b>' + esc(f.titulo) + '</b>' +
+                '<span class="tk">' + (TIPOS_EST[f.tipo] || '✦') + ' ' + esc(f.tipo || 'otro') + '</span></div>' +
+                (emb ? '<iframe src="' + emb + '" title="' + esc(f.titulo) +
+                    '" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>'
+                    : '') +
+                (f.url ? '<a class="eurl" href="' + esc(f.url) + '" target="_blank" rel="noopener">▶ abrir</a>' : '') +
+                '</div>';
+        }
+
+        async function renderEstados() {
+            const filas = await fetchEstados();
             const box = $('nowPlayingBox');
-            if (!np || !np.label) {
-                box.style.display = 'none';
-                return;
-            }
+            if (!filas.length) { box.style.display = 'none'; return; }
             box.style.display = 'block';
-            let html = '<div class="estado-linea">🎵 <b>' + esc(np.label) + '</b></div>';
-            if (np.url) {
-                html += '<div class="small" style="margin-top:6px;"><a href="' + esc(np.url) +
-                    '" target="_blank" rel="noopener" style="color:var(--morado-neon)">▶ ver en youtube</a></div>';
-            }
-            $('nowPlayingBody').innerHTML = html;
+            $('nowPlayingBody').innerHTML = filas.map(estHtml).join('');
         }
-        renderNowPlaying();
+        renderEstados();
 
-        $('nowForm').addEventListener('submit', async e => {
+        /* ---------- estado: panel del dueño ---------- */
+        async function renderEstAdmin() {
+            const c = $('estList');
+            if (!c) return;
+            const filas = await fetchEstados();
+            if (!filas.length) { c.innerHTML = '<p class="empty-hint">nada en el estado todavía.</p>'; return; }
+            c.innerHTML = filas.map(f =>
+                '<div class="prv-post"><div class="ph"><span class="pt">' +
+                esc(f.titulo) + '</span><span class="pd">' +
+                (TIPOS_EST[f.tipo] || '✦') + ' ' + esc(f.tipo || 'otro') +
+                ' <button class="del" data-del-est="' + esc(f.id) + '">✕</button></span></div>' +
+                '<div class="pb">' + esc(f.url || '') + '</div></div>'
+            ).join('');
+        }
+
+        $('estForm').addEventListener('submit', async e => {
             e.preventDefault();
-            const label = $('nowLabel').value.trim();
-            if (!label) return;
-            const { error } = await sb.from('now_playing').update({
-                label: label, url: $('nowUrl').value.trim() || null, updated_at: new Date().toISOString()
-            }).eq('id', 1);
-            if (error) { toast('no se pudo actualizar: ' + error.message); return; }
-            $('nowLabel').value = '';
-            $('nowUrl').value = '';
-            await renderNowPlaying();
-            toast('estado actualizado. 🎧');
-        });
-
-        $('nowClear').addEventListener('click', async () => {
-            const { error } = await sb.from('now_playing').update({ label: null, url: null }).eq('id', 1);
-            if (!error) { await renderNowPlaying(); toast('estado apagado.'); }
+            const form = e.target;
+            const titulo = form.querySelector('#estTitulo').value.trim();
+            const url = form.querySelector('#estUrl').value.trim();
+            const tipo = form.querySelector('#estTipo').value;
+            if (!titulo || !url) return;
+            const { error } = await sb.from('estados').insert({
+                tipo, titulo, url, actualizado: new Date().toISOString()
+            });
+            if (error) { toast('no se pudo agregar: ' + (error.code || error.message)); return; }
+            form.reset();
+            await renderEstados();
+            await renderEstAdmin();
+            toast('estado actualizado. ✦');
         });
 
         /* Los formularios de comentarios y de agradecimientos viven dentro de
            HTML que se re-dibuja entero, así que se atienden por delegación en
-           document en vez de con un addEventListener por nota. */
+           document en vez de con un addEventListener por nota. Ojo: el form de
+           respuesta a un comentario tiene las dos clases (agrad-form para el
+           estilo, com-reply-form para saber a quién contesta), así que esta
+           comprobación tiene que ir antes que la de agradecimientos. */
         document.addEventListener('submit', async e => {
             const form = e.target;
             if (form.classList && form.classList.contains('com-form')) {
                 e.preventDefault();
                 await mandarComentario(form);
+                return;
+            }
+            if (form.classList && form.classList.contains('com-reply-form')) {
+                e.preventDefault();
+                await mandarRespuestaComentario(form);
                 return;
             }
             if (form.classList && form.classList.contains('agrad-form')) {
@@ -4993,8 +5374,17 @@
             }
             const dcom = e.target.closest('[data-del-com]');
             if (dcom) {
-                const { error } = await sb.from('post_comments').delete().eq('id', dcom.dataset.delCom);
-                if (!error) { toast('comentario borrado.'); await renderPubPosts(); }
+                const id = String(dcom.dataset.delCom);
+                if (!confirm('¿borrar este comentario? se va con su respuesta.')) return;
+                const { error } = await sb.from('post_comments').delete().eq('id', id);
+                if (!error) {
+                    /* la respuesta del dueño se va con el comentario: si no
+                       queda colgada apuntando a algo que ya no existe */
+                    await sb.from('comment_replies').delete().eq('comment_id', id);
+                    toast('comentario borrado.');
+                    await renderPubPosts();
+                    if ($('comPane').classList.contains('show')) await renderComAdmin();
+                }
                 else toast('no se pudo borrar el comentario.');
                 return;
             }
@@ -5002,22 +5392,54 @@
             if (dpub) {
                 const id = dpub.dataset.delPub;
                 const { data: fila } = await sb.from('posts').select('attachments, attach_url').eq('id', id).single();
+                /* los ids de los comentarios se necesitan antes de borrarlos:
+                   las respuestas se cuelgan de esos ids, no del id de la nota */
+                const { data: susComentarios } = await sb.from('post_comments')
+                    .select('id').eq('post_id', String(id)).limit(500);
                 const { error } = await sb.from('posts').delete().eq('id', id);
                 if (!error) {
                     /* los comentarios de esa nota se van con ella */
                     await sb.from('post_comments').delete().eq('post_id', String(id));
+                    const comIds = (susComentarios || []).map(c => String(c.id));
+                    if (comIds.length) await sb.from('comment_replies').delete().in('comment_id', comIds);
                     const items = (fila && Array.isArray(fila.attachments) && fila.attachments.length)
                         ? fila.attachments : (fila && fila.attach_url ? [{ url: fila.attach_url }] : []);
                     const paths = items.map(a => pathDeUrlPublica(a.url)).filter(Boolean);
                     if (paths.length) sb.storage.from('post-media').remove(paths).catch(() => { });
                     await renderPubPosts();
                     await renderPubAdmin();
+                    await renderComAdmin();
                 }
                 return;
             }
             const rgb = e.target.closest('[data-reply-gb]');
             if (rgb) {
                 await irAResponder(String(rgb.dataset.replyGb));
+                return;
+            }
+            const rcom = e.target.closest('[data-reply-com]');
+            if (rcom) {
+                await irAResponderCom(String(rcom.dataset.replyCom));
+                return;
+            }
+            const dem = e.target.closest('.emoji-bar button[data-e]');
+            if (dem) {
+                /* el emoji va al cursor del textarea de su propio formulario,
+                   no al final: los forms se dibujan enteros y se atienden
+                   por delegación, así que no hay referencia guardada */
+                const formEmo = dem.closest('form');
+                const ta = formEmo && formEmo.querySelector('textarea');
+                if (ta) meterEmoji(ta, dem.dataset.e);
+                return;
+            }
+            const drepcom = e.target.closest('[data-del-reply-com]');
+            if (drepcom) {
+                if (!confirm('¿quitar tu respuesta de este comentario?')) return;
+                const { error } = await sb.from('comment_replies').delete().eq('comment_id', String(drepcom.dataset.delReplyCom));
+                if (error) { toast('no se pudo quitar (' + (error.code || error.message) + ')'); return; }
+                toast('respuesta quitada.');
+                await renderComAdmin();
+                await renderPubPosts();
                 return;
             }
             const drep = e.target.closest('[data-del-reply]');
@@ -5028,6 +5450,16 @@
                 toast('respuesta quitada.');
                 await renderAgrad();
                 await renderGB();
+                return;
+            }
+            const dest = e.target.closest('[data-del-est]');
+            if (dest) {
+                if (!confirm('¿sacar esto del estado? se ve en la barra lateral.')) return;
+                const { error } = await sb.from('estados').delete().eq('id', dest.dataset.delEst);
+                if (error) { toast('no se pudo quitar (' + (error.code || error.message) + ')'); return; }
+                toast('fuera del estado.');
+                await renderEstados();
+                await renderEstAdmin();
                 return;
             }
             const dgb = e.target.closest('[data-del-gb]');
