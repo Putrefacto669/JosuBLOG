@@ -1765,8 +1765,9 @@
         /* =====================================================================
            ❄ MODO INVIERNO — diseño exclusivo del celular ❄
            Sale de la foto de los ojos: blanco nieve, tinta negra salpicada y
-           el rojo del iris. La estética es la de Cry of Fear: Estocolmo
-           nevado, frío, y alguien mirándote desde el otro lado del vidrio.
+           el rojo del iris. La estética es la de Cry of Fear: Managua con
+           nieve, frío, y alguien mirándote desde el otro lado del vidrio.
+           (el nombre es broma: "-14°C en Managua" es el chiste entero)
            - el header se vuelve un "hero" transparente: los ojos se ven
              enteros y el título va en tinta sobre la zona blanca
            - las cajas son tarjetas de tinta con escarcha y nieve acumulada
@@ -2294,7 +2295,7 @@
             <!-- solo se ve en el celular (modo invierno) -->
             <div class="clima" aria-hidden="true">
                 <span>❄ <b id="temp">-14°C</b></span>
-                <span>estocolmo · 03:00</span>
+                <span>managua · 03:00</span>
                 <span>la nieve no para</span>
             </div>
         </header>
@@ -3967,7 +3968,9 @@
             }
         }
 
-        /* temperatura de "estocolmo": se mueve un poco cada tanto */
+        /* temperatura de "managua": se mueve un poco cada tanto.
+           Ojo: el rango es bajo cero a propósito. Managua no tiene hielo,
+           por eso el chiste es que el celular se haga el Stockholm. */
         (function () {
             const t = $('temp');
             if (!t) return;
