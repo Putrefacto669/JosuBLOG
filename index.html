@@ -469,6 +469,32 @@
             background: #000;
         }
 
+        /* el archivo propio del estado: se reproduce acá, sin ir a youtube */
+        .est-card video {
+            width: 100%;
+            max-height: 320px;
+            display: block;
+            margin-top: 5px;
+            background: #000;
+            border: 1px solid var(--morado);
+        }
+
+        .est-card audio {
+            width: 100%;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .est-card .eimg {
+            width: 100%;
+            max-height: 190px;
+            object-fit: cover;
+            display: block;
+            margin-top: 5px;
+            border: 1px solid var(--morado);
+            background: #000;
+        }
+
         .est-card .eurl {
             display: block;
             font-family: var(--term);
@@ -2721,12 +2747,18 @@
                 </select>
                 <input type="text" name="titulo" id="estTitulo" placeholder="canción / opening / lo que sea..." maxlength="80"
                     required>
-                <input type="url" name="url" id="estUrl" placeholder="link de youtube (watch, youtu.be, shorts...)"
-                    required>
+                <label class="file-drop" id="estDrop">
+                    <input type="file" id="estFiles" accept="image/*,video/*,audio/*" hidden>
+                    <span>🎧 subí el audio o el video del opening</span>
+                    <small>se reproduce acá mismo, sin salir del blog · mp3, mp4, webm · arrastrá y soltá</small>
+                </label>
+                <div id="estPrev" class="adj-prev"></div>
+                <input type="url" name="url" id="estUrl" placeholder="(opcional) link de youtube si no lo subís vos">
                 <button type="submit">AGREGAR AL ESTADO</button>
             </form>
-            <p class="empty-hint">cada fila sale como tarjeta en la barra lateral, con el video de youtube
-                embebido. se muestran hasta 6, de más nuevo a más viejo.</p>
+            <p class="empty-hint">podés subir el archivo (queda tocado en el blog) o dejar un link de youtube
+                (sale embebido). si no ponés ninguna de las dos, la tarjeta sale sin preview. se muestran hasta 6,
+                de más nuevo a más viejo.</p>
             <div id="estList"></div>
         </div>
 
@@ -5275,14 +5307,32 @@
         }
 
         function estHtml(f) {
-            const emb = embedDeYoutube(f.url);
+            /* medio es {kind, url} del archivo que se subió al blog. Antes de
+               esta columna no existía: las filas viejas no la tienen y siguen
+               mostrando solo el embed de youtube. */
+            const m = f.medio && f.medio.url ? f.medio : null;
+            const emb = m ? null : embedDeYoutube(f.url);
+            let preview = '';
+            if (m) {
+                const u = esc(m.url);
+                if (m.kind === 'video') {
+                    preview = '<video src="' + u + '" controls preload="metadata" playsinline></video>';
+                } else if (m.kind === 'audio') {
+                    preview = '<audio src="' + u + '" controls preload="metadata"></audio>';
+                } else if (m.kind === 'img') {
+                    preview = '<img class="eimg" src="' + u + '" alt="' + esc(f.titulo) + '" loading="lazy">';
+                } else {
+                    preview = '<a class="eurl" href="' + u + '" target="_blank" rel="noopener">▶ abrir el archivo</a>';
+                }
+            } else if (emb) {
+                preview = '<iframe src="' + emb + '" title="' + esc(f.titulo) +
+                    '" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+            }
             return '<div class="est-card">' +
                 '<div class="et"><b>' + esc(f.titulo) + '</b>' +
                 '<span class="tk">' + (TIPOS_EST[f.tipo] || '✦') + ' ' + esc(f.tipo || 'otro') + '</span></div>' +
-                (emb ? '<iframe src="' + emb + '" title="' + esc(f.titulo) +
-                    '" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>'
-                    : '') +
-                (f.url ? '<a class="eurl" href="' + esc(f.url) + '" target="_blank" rel="noopener">▶ abrir</a>' : '') +
+                preview +
+                (f.url && !m ? '<a class="eurl" href="' + esc(f.url) + '" target="_blank" rel="noopener">▶ youtube</a>' : '') +
                 '</div>';
         }
 
@@ -5305,10 +5355,85 @@
                 '<div class="prv-post"><div class="ph"><span class="pt">' +
                 esc(f.titulo) + '</span><span class="pd">' +
                 (TIPOS_EST[f.tipo] || '✦') + ' ' + esc(f.tipo || 'otro') +
+                (f.medio && f.medio.url ? ' · 🎧 ' + (f.medio.kind || 'archivo') : '') +
                 ' <button class="del" data-del-est="' + esc(f.id) + '">✕</button></span></div>' +
                 '<div class="pb">' + esc(f.url || '') + '</div></div>'
             ).join('');
         }
+
+        /* archivo elegido para el estado, esperando el submit (mismo patrón que
+           los adjuntos de las notas) */
+        let estPendientes = [];
+
+        function estRenderPendientes() {
+            const c = $('estPrev');
+            if (!c) return;
+            c.innerHTML = '';
+            estPendientes.forEach(a => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                if (a.kind === 'img') {
+                    const im = document.createElement('img');
+                    im.src = URL.createObjectURL(a.file);
+                    im.onload = () => URL.revokeObjectURL(im.src);
+                    chip.appendChild(im);
+                } else {
+                    chip.appendChild(document.createTextNode(a.kind === 'video' ? '🎞' : '🎵'));
+                }
+                const b = document.createElement('b');
+                b.textContent = a.file.name + ' (' + (a.file.size / 1048576).toFixed(1) + 'MB)';
+                chip.appendChild(b);
+                const x = document.createElement('button');
+                x.type = 'button';
+                x.textContent = '✕';
+                x.onclick = () => {
+                    estPendientes = estPendientes.filter(z => z.id !== a.id);
+                    estRenderPendientes();
+                };
+                chip.appendChild(x);
+                c.appendChild(chip);
+            });
+        }
+
+        function estAgregarArchivos(lista) {
+            for (const f of lista) {
+                if (f.size > 50 * 1024 * 1024) {
+                    toast('«' + f.name + '» pesa demasiado (máx 50MB).');
+                    continue;
+                }
+                const kind = tipoDe(f.type);
+                if (kind === 'otro') {
+                    toast('«' + f.name + '» no es imagen, video ni audio.');
+                    continue;
+                }
+                /* un opening por estado: si ya hay uno esperando, se avisa en
+                   vez de dejar dos y publicar solo el primero */
+                if (estPendientes.length) {
+                    toast('ya hay un archivo esperando. sacalo primero con el ✕.');
+                    continue;
+                }
+                estPendientes.push({ id: nuevoId(), file: f, kind: kind });
+            }
+            estRenderPendientes();
+        }
+
+        (function () {
+            const drop = $('estDrop');
+            if (!drop) return;
+            $('estFiles').addEventListener('change', e => {
+                estAgregarArchivos([...e.target.files]);
+                e.target.value = '';
+            });
+            ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => {
+                e.preventDefault(); drop.classList.add('drag');
+            }));
+            ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => {
+                e.preventDefault(); drop.classList.remove('drag');
+            }));
+            drop.addEventListener('drop', e => {
+                if (e.dataTransfer && e.dataTransfer.files.length) estAgregarArchivos([...e.dataTransfer.files]);
+            });
+        })();
 
         $('estForm').addEventListener('submit', async e => {
             e.preventDefault();
@@ -5316,15 +5441,38 @@
             const titulo = form.querySelector('#estTitulo').value.trim();
             const url = form.querySelector('#estUrl').value.trim();
             const tipo = form.querySelector('#estTipo').value;
-            if (!titulo || !url) return;
+            if (!titulo) return;
+            /* el preview es opcional, pero tiene que haber algo: si no, la
+               tarjeta sale vacía y no se ve de qué habla */
+            if (!url && !estPendientes.length) {
+                toast('subí el archivo o dejá un link de youtube.');
+                return;
+            }
+
+            let medio = null;
+            const archivo = estPendientes[0];
+            if (archivo) {
+                try {
+                    const subio = await subirArchivo(archivo.file);
+                    medio = { kind: archivo.kind, url: subio };
+                } catch (err) {
+                    /* si la subida falla no se inserta la fila: más vale un
+                       toast que un estado sin nada que reproducir */
+                    toast('no se pudo subir «' + archivo.file.name + '»: ' + err.message);
+                    return;
+                }
+            }
+
             const { error } = await sb.from('estados').insert({
-                tipo, titulo, url, actualizado: new Date().toISOString()
+                tipo, titulo, url: url || null, medio, actualizado: new Date().toISOString()
             });
             if (error) { toast('no se pudo agregar: ' + (error.code || error.message)); return; }
             form.reset();
+            estPendientes = [];
+            estRenderPendientes();
             await renderEstados();
             await renderEstAdmin();
-            toast('estado actualizado. ✦');
+            toast(medio ? 'estado actualizado, se reproduce acá. 🎧' : 'estado actualizado. ✦');
         });
 
         /* Los formularios de comentarios y de agradecimientos viven dentro de
@@ -5455,8 +5603,15 @@
             const dest = e.target.closest('[data-del-est]');
             if (dest) {
                 if (!confirm('¿sacar esto del estado? se ve en la barra lateral.')) return;
-                const { error } = await sb.from('estados').delete().eq('id', dest.dataset.delEst);
+                const id = String(dest.dataset.delEst);
+                /* el path del archivo se lee antes de borrar la fila: si no,
+                   después no hay forma de saber qué había que limpiar del
+                   bucket y el archivo queda ocupando espacio para siempre */
+                const { data: fila } = await sb.from('estados').select('medio').eq('id', id).maybeSingle();
+                const { error } = await sb.from('estados').delete().eq('id', id);
                 if (error) { toast('no se pudo quitar (' + (error.code || error.message) + ')'); return; }
+                const path = fila && fila.medio && fila.medio.url ? pathDeUrlPublica(fila.medio.url) : null;
+                if (path) sb.storage.from('post-media').remove(path).catch(() => { });
                 toast('fuera del estado.');
                 await renderEstados();
                 await renderEstAdmin();
