@@ -463,15 +463,48 @@
             width: 100%;
             aspect-ratio: 16 / 9;
             height: auto;
+            /* red de seguridad: si el navegador ignora aspect-ratio en el
+               iframe, con height:auto la caja colapsa a 0 y el embed queda
+               invisible (que es como se ve "vacío" y uno busca el link) */
+            min-height: 140px;
             border: 0;
             display: block;
             margin-top: 5px;
             background: #000;
         }
 
+        /* el link de youtube queda escondido detrás de un desplegable: es el
+           atajo, no la forma normal de cargar un estado */
+        #estAlt {
+            margin-top: 6px;
+        }
+
+        #estAlt summary {
+            cursor: pointer;
+            font-family: var(--term);
+            font-size: 15px;
+            color: var(--morado-neon);
+            list-style: none;
+        }
+
+        #estAlt summary::-webkit-details-marker {
+            display: none;
+        }
+
+        #estAlt summary::before {
+            content: '▸ ';
+        }
+
+        #estAlt[open] summary::before {
+            content: '▾ ';
+        }
+
+        #estAlt[open] summary {
+            margin-bottom: 4px;
+        }
+
         /* el archivo propio del estado: se reproduce acá, sin ir a youtube */
-        .est-card video {
-            width: 100%;
+        .est-card video {            width: 100%;
             max-height: 320px;
             display: block;
             margin-top: 5px;
@@ -2753,12 +2786,16 @@
                     <small>se reproduce acá mismo, sin salir del blog · mp3, mp4, webm · arrastrá y soltá</small>
                 </label>
                 <div id="estPrev" class="adj-prev"></div>
-                <input type="url" name="url" id="estUrl" placeholder="(opcional) link de youtube si no lo subís vos">
+                <details id="estAlt">
+                    <summary class="small">no tengo el archivo · prefiero un link de youtube</summary>
+                    <input type="url" name="url" id="estUrl" placeholder="link de youtube (sale con el player de youtube)">
+                </details>
                 <button type="submit">AGREGAR AL ESTADO</button>
             </form>
-            <p class="empty-hint">podés subir el archivo (queda tocado en el blog) o dejar un link de youtube
-                (sale embebido). si no ponés ninguna de las dos, la tarjeta sale sin preview. se muestran hasta 6,
-                de más nuevo a más viejo.</p>
+            <p class="empty-hint">subiendo el archivo, el opening se reproduce en el blog con nuestros propios
+                botones: no se abre youtube ni en otra pestaña. el link de youtube es el atajo para cuando no
+                tenés el archivo a mano, pero ese sí usa el player de youtube. se muestran hasta 6 tarjetas, de más
+                nuevo a más viejo.</p>
             <div id="estList"></div>
         </div>
 
@@ -5332,7 +5369,6 @@
                 '<div class="et"><b>' + esc(f.titulo) + '</b>' +
                 '<span class="tk">' + (TIPOS_EST[f.tipo] || '✦') + ' ' + esc(f.tipo || 'otro') + '</span></div>' +
                 preview +
-                (f.url && !m ? '<a class="eurl" href="' + esc(f.url) + '" target="_blank" rel="noopener">▶ youtube</a>' : '') +
                 '</div>';
         }
 
